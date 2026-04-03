@@ -1,0 +1,46 @@
+from langgraph.graph import StateGraph , START , END
+from langchain_google_genai import ChatGoogleGenerativeAI
+from typing import TypedDict , Literal , Annotated
+from dotenv import load_dotenv
+from pydantic import BaseModel , Field  
+from langchain_core.messages import HumanMessage , SystemMessage , BaseMessage
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import add_messages
+
+
+load_dotenv()
+
+model = ChatGoogleGenerativeAI(model='gemini-3.5-flash')
+
+
+class ChatState(TypedDict):
+    messages: Annotated[list[BaseMessage] ,add_messages]
+
+
+def chat_node(state:ChatState):
+    messages = state['messages']
+    reply = model.invoke(messages).content
+    return {'messages':[reply]}
+
+graph = StateGraph(ChatState)
+graph.add_node('chat_node' , chat_node)
+
+graph.add_edge(START , 'chat_node')
+graph.add_edge('chat_node' , END)
+
+checkpointer = InMemorySaver()
+workflow = graph.compile(checkpointer=checkpointer)
+
+
+thread_id ='1'
+while True:
+    user_message=input('Type here:')
+
+    print('User:', user_message)
+    if user_message.strip().lower() in ['exit' , 'quit' , 'bye']:
+        break
+
+    config= {'configurable':{'thread_id':thread_id}}
+    response=workflow.invoke({'messages':[HumanMessage(content=user_message)]} , config)
+    print('AI:' , response['messages'][-1].content)
+
