@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg:          #000000;
+  --bg-sidebar:  #0a0a0a;
+  --bg-card:     #0d0d0d;
+  --bg-input:    #141414;
+  --bg-active:   #161616;
+  --border:      #232323;
+  --border-soft: #2a2a2a;
+  --lime:        #d4ff4f;
+  --text:        #f5f5f5;
+  --muted:       #8a8a8a;
+  --dim:         #7a7a7a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+textarea { resize: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+
+/* Markdown */
+.prose { color: #d4d4d4; font-size: 14px; line-height: 1.75; }
+.prose h1,.prose h2,.prose h3 { color: #f5f5f5; font-weight: 600; margin: 1.2em 0 .5em; }
+.prose h1{font-size:1.35rem}.prose h2{font-size:1.15rem}.prose h3{font-size:1rem}
+.prose p { margin-bottom: .8em; }
+.prose ul,.prose ol { padding-left:1.4em; margin-bottom:.8em; }
+.prose li { margin-bottom:.2em; }
+.prose a { color:#d4ff4f; text-decoration:underline; }
+.prose blockquote { border-left:2px solid #232323; padding-left:.875em; color:#7a7a7a; margin:1em 0; }
+.prose strong { color:#f5f5f5; font-weight:600; }
+.prose code { background:#1a1a1a; padding:.15em .4em; border-radius:4px; font-size:.84em; color:#d4ff4f; font-family:monospace; }
+.prose pre { background:#0a0a0a; border:0.5px solid #232323; border-radius:8px; overflow:hidden; margin:1em 0; }
+.prose pre code { background:transparent; padding:0; color:#e2e8f0; font-size:.875em; }
+
+/* Typing animation */
+@keyframes typing-bounce {
+  0%,80%,100% { transform:scale(.55); opacity:.3 }
+  40%          { transform:scale(1);   opacity:1  }
+}
+.typing-dot:nth-child(1){animation:typing-bounce 1.2s infinite 0s}
+.typing-dot:nth-child(2){animation:typing-bounce 1.2s infinite .2s}
+.typing-dot:nth-child(3){animation:typing-bounce 1.2s infinite .4s}
+
+/* Message fade-in */
+@keyframes msg-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.msg-in { animation:msg-in .22s ease forwards; }
+
+/* Dropdown */
+@keyframes drop-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.drop-in { animation:drop-in .14s ease forwards; }
