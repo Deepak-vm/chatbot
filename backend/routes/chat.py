@@ -7,9 +7,25 @@ from graph import workflow
 from schemas import ChatRequest, ChatResponse, ConversationOut, MessageOut, RenameRequest
 
 router = APIRouter(prefix="/api", tags=["chat"])
+
+
+def extract_content(raw) -> str:
+    """
+    Gemini can return content as either:
+      - a plain string: "Hello!"
+      - a list of parts: [{'type': 'text', 'text': 'Hello!'}]
+    This helper always returns a plain string.
+    """
+    if isinstance(raw, list):
+        return "".join(
+            part.get("text", "") if isinstance(part, dict) else str(part)
+            for part in raw
+        )
+    return str(raw)
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-
     thread_id = req.conversation_id or str(uuid.uuid4())
 
     try:
@@ -19,9 +35,11 @@ async def chat(req: ChatRequest):
             config,
         )
         last = result["messages"][-1]
+        content = extract_content(last.content)
+
         return ChatResponse(
             conversation_id=thread_id,
-            message=MessageOut(role="assistant", content=last.content),
+            message=MessageOut(role="assistant", content=content),
             sources=[],
         )
     except Exception as exc:
