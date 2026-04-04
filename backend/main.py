@@ -1,46 +1,35 @@
-from langgraph.graph import StateGraph , START , END
-from langchain_google_genai import ChatGoogleGenerativeAI
-from typing import TypedDict , Literal , Annotated
-from dotenv import load_dotenv
-from pydantic import BaseModel , Field  
-from langchain_core.messages import HumanMessage , SystemMessage , BaseMessage
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.graph import add_messages
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from routes import router
+
+app = FastAPI()
 
 
-load_dotenv()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-model = ChatGoogleGenerativeAI(model='gemini-3.5-flash')
-
-
-class ChatState(TypedDict):
-    messages: Annotated[list[BaseMessage] ,add_messages]
-
-
-def chat_node(state:ChatState):
-    messages = state['messages']
-    reply = model.invoke(messages).content
-    return {'messages':[reply]}
-
-graph = StateGraph(ChatState)
-graph.add_node('chat_node' , chat_node)
-
-graph.add_edge(START , 'chat_node')
-graph.add_edge('chat_node' , END)
-
-checkpointer = InMemorySaver()
-workflow = graph.compile(checkpointer=checkpointer)
+app.include_router(router)
 
 
-thread_id ='1'
-while True:
-    user_message=input('Type here:')
+@app.get("/", tags=["health"])
+def root():
+    return {"status": "ok", "message": "LangGraph Chat API is running"}
 
-    print('User:', user_message)
-    if user_message.strip().lower() in ['exit' , 'quit' , 'bye']:
-        break
 
-    config= {'configurable':{'thread_id':thread_id}}
-    response=workflow.invoke({'messages':[HumanMessage(content=user_message)]} , config)
-    print('AI:' , response['messages'][-1].content)
+@app.get("/health", tags=["health"])
+def health():
+    return {"status": "healthy"}
 
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

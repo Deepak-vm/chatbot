@@ -1,7 +1,7 @@
 import { createContext, useReducer, useCallback, useEffect } from 'react';
 import * as api from '../services/api';
 import { generateId } from '../utils/helpers';
-import { DEFAULT_MODEL, INITIAL_CONVERSATIONS } from '../utils/constants';
+import { DEFAULT_MODEL } from '../utils/constants';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export const ChatContext = createContext(null);
@@ -100,7 +100,7 @@ function chatReducer(state, action) {
 export function ChatProvider({ children }) {
   const [persistedConversations, setPersistedConversations] = useLocalStorage(
     'lg_conversations',
-    INITIAL_CONVERSATIONS
+    []
   );
   const [persistedMessages, setPersistedMessages] = useLocalStorage(
     'lg_messages',
