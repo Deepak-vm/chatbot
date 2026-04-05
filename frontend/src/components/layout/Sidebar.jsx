@@ -119,7 +119,7 @@ export function Sidebar() {
       <aside
         aria-label="Sidebar"
         style={{
-          width: sidebarOpen ? 200 : 0,
+          width: sidebarOpen ? 260 : 0,
           background: '#0a0a0a',
           borderRight: '0.5px solid #232323',
           display: 'flex',
@@ -132,7 +132,7 @@ export function Sidebar() {
         }}
         className="fixed lg:relative inset-y-0 left-0 z-30 lg:z-auto h-full"
       >
-        <div style={{ width: 180, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ width: 240, display: 'flex', flexDirection: 'column', height: '100%' }}>
 
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px 14px', color: '#f5f5f5', fontSize: 14, fontWeight: 500 }}>

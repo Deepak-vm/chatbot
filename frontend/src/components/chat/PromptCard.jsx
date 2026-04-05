@@ -1,7 +1,7 @@
-import { Layers, Database, Code2, Sparkles } from 'lucide-react';
+import { Terminal, Database, Bug, CheckSquare, Sparkles } from 'lucide-react';
 import { useChat } from '../../hooks/useChat';
 
-const ICON_MAP = { Layers, Database, Code2, Sparkles };
+const ICON_MAP = { Terminal, Database, Bug, CheckSquare, Sparkles };
 
 export function PromptCard({ card }) {
   const { sendMessage } = useChat();
@@ -15,24 +15,22 @@ export function PromptCard({ card }) {
         background: '#0d0d0d',
         border: '0.5px solid #232323',
         borderRadius: 10,
-        padding: 12,
+        padding: '16px 18px',
         textAlign: 'left',
         cursor: 'pointer',
         transition: 'border-color 0.15s, background 0.15s',
         display: 'flex',
         flexDirection: 'column',
+        minHeight: 100,
       }}
       onMouseEnter={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.background = '#111'; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = '#232323'; e.currentTarget.style.background = '#0d0d0d'; }}
     >
-      {/* Lime icon */}
-      <Icon size={16} style={{ color: '#d4ff4f' }} />
-      {/* Title */}
-      <div style={{ fontSize: 13, color: '#f5f5f5', marginTop: 6, fontWeight: 500 }}>
+      <Icon size={18} style={{ color: '#d4ff4f' }}/>
+      <div style={{ fontSize: 14, color: '#f5f5f5', marginTop: 10, fontWeight: 500 }}>
         {card.title}
       </div>
-      {/* Description */}
-      <div style={{ fontSize: 11, color: '#8a8a8a', marginTop: 2 }}>
+      <div style={{ fontSize: 12, color: '#8a8a8a', marginTop: 4, lineHeight: 1.5 }}>
         {card.description}
       </div>
     </button>

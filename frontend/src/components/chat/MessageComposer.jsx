@@ -29,8 +29,8 @@ export function MessageComposer() {
   };
 
   return (
-    <div style={{ padding: '14px 20px 18px', flexShrink: 0 }}>
-      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+    <div style={{ padding: '8px 28px 16px', flexShrink: 0 }}>
+      <div style={{ width: '100%' }}>
         {/* Input card — matches reference exactly */}
         <div style={{
           background: '#0d0d0d',

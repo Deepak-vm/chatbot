@@ -70,7 +70,7 @@ export function ChatWindow() {
         {messages.length === 0 && !isLoading ? (
           <WelcomeScreen/>
         ) : (
-          <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ width: '100%', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {messages.map((msg, i) => (
               <ChatMessage
                 key={msg.id}
