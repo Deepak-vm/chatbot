@@ -1,5 +1,6 @@
-import { createContext, useReducer, useCallback, useEffect } from 'react';
+import { createContext, useReducer, useCallback, useEffect, useRef } from 'react';
 import * as api from '../services/api';
+import { streamMessage } from '../services/api';
 import { generateId } from '../utils/helpers';
 import { DEFAULT_MODEL } from '../utils/constants';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -13,6 +14,7 @@ const initialState = {
   activeConversationId: null,
   messages: [],
   isLoading: false,
+  isStreaming: false,
   error: null,
   selectedModel: DEFAULT_MODEL,
   sidebarOpen: true,
@@ -64,6 +66,18 @@ function chatReducer(state, action) {
       if (msgs.length > 0) msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], ...action.payload };
       return { ...state, messages: msgs };
     }
+
+    case 'APPEND_TOKEN': {
+      const msgs = [...state.messages];
+      if (msgs.length > 0) {
+        const last = msgs[msgs.length - 1];
+        msgs[msgs.length - 1] = { ...last, content: last.content + action.payload };
+      }
+      return { ...state, messages: msgs };
+    }
+
+    case 'SET_STREAMING':
+      return { ...state, isStreaming: action.payload };
 
     case 'REMOVE_LAST_MESSAGE': {
       return { ...state, messages: state.messages.slice(0, -1) };
@@ -183,9 +197,57 @@ export function ChatProvider({ children }) {
     }
   }, [state.activeConversationId]);
 
+  // Ref to abort the current stream if the user sends a new message
+  const abortStreamRef = useRef(null);
+
+  const _startStream = useCallback(
+    (convId, content) => {
+      // Cancel any in-flight stream
+      if (abortStreamRef.current) abortStreamRef.current();
+
+      // Add an empty assistant placeholder that we'll fill token-by-token
+      const assistantMsg = {
+        id: generateId(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        sources: [],
+        streaming: true,
+      };
+      dispatch({ type: 'ADD_MESSAGE', payload: assistantMsg });
+      dispatch({ type: 'SET_STREAMING', payload: true });
+
+      const abort = streamMessage(
+        convId,
+        content,
+        state.selectedModel.label,
+        // onToken — append each token to the last message
+        (token) => dispatch({ type: 'APPEND_TOKEN', payload: token }),
+        // onDone
+        (_finalConvId) => {
+          dispatch({ type: 'UPDATE_LAST_MESSAGE', payload: { streaming: false } });
+          dispatch({ type: 'SET_STREAMING', payload: false });
+          dispatch({ type: 'SET_LOADING', payload: false });
+          abortStreamRef.current = null;
+        },
+        // onError
+        (errMsg) => {
+          dispatch({ type: 'UPDATE_LAST_MESSAGE', payload: { streaming: false } });
+          dispatch({ type: 'SET_STREAMING', payload: false });
+          dispatch({ type: 'SET_LOADING', payload: false });
+          dispatch({ type: 'SET_ERROR', payload: errMsg || 'Streaming failed. Please try again.' });
+          abortStreamRef.current = null;
+        },
+      );
+
+      abortStreamRef.current = abort;
+    },
+    [state.selectedModel]
+  );
+
   const sendMessage = useCallback(
-    async (content) => {
-      if (!content.trim() || state.isLoading) return;
+    (content) => {
+      if (!content.trim() || state.isLoading || state.isStreaming) return;
 
       dispatch({ type: 'CLEAR_ERROR' });
 
@@ -222,33 +284,25 @@ export function ChatProvider({ children }) {
       dispatch({ type: 'ADD_MESSAGE', payload: userMsg });
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      try {
-        const response = await api.sendMessage(convId, content, state.selectedModel.label);
-        const assistantMsg = {
-          id: generateId(),
-          role: 'assistant',
-          content: response.message.content,
-          timestamp: new Date().toISOString(),
-          sources: response.sources || [],
-        };
-        dispatch({ type: 'ADD_MESSAGE', payload: assistantMsg });
-      } catch {
-        dispatch({
-          type: 'SET_ERROR',
-          payload: 'Something went wrong. Please try again.',
-        });
-      } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
+      _startStream(convId, content);
     },
-    [state.activeConversationId, state.isLoading, state.selectedModel, persistedMessages]
+    [state.activeConversationId, state.isLoading, state.isStreaming, state.selectedModel, persistedMessages, _startStream]
   );
 
-  const regenerateLastResponse = useCallback(async () => {
+  const stopStreaming = useCallback(() => {
+    if (abortStreamRef.current) {
+      abortStreamRef.current();
+      abortStreamRef.current = null;
+    }
+    dispatch({ type: 'UPDATE_LAST_MESSAGE', payload: { streaming: false } });
+    dispatch({ type: 'SET_STREAMING', payload: false });
+    dispatch({ type: 'SET_LOADING', payload: false });
+  }, []);
+
+  const regenerateLastResponse = useCallback(() => {
     const msgs = state.messages;
     if (msgs.length < 2) return;
 
-    // Remove last assistant message
     const lastUserMsg = [...msgs].reverse().find((m) => m.role === 'user');
     if (!lastUserMsg) return;
 
@@ -256,29 +310,8 @@ export function ChatProvider({ children }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'CLEAR_ERROR' });
 
-    try {
-      const response = await api.sendMessage(
-        state.activeConversationId,
-        lastUserMsg.content,
-        state.selectedModel.label
-      );
-      const assistantMsg = {
-        id: generateId(),
-        role: 'assistant',
-        content: response.message.content,
-        timestamp: new Date().toISOString(),
-        sources: response.sources || [],
-      };
-      dispatch({ type: 'ADD_MESSAGE', payload: assistantMsg });
-    } catch {
-      dispatch({
-        type: 'SET_ERROR',
-        payload: 'Failed to regenerate response. Please try again.',
-      });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  }, [state.messages, state.activeConversationId, state.selectedModel]);
+    _startStream(state.activeConversationId, lastUserMsg.content);
+  }, [state.messages, state.activeConversationId, _startStream]);
 
   const setModel = useCallback((model) => {
     dispatch({ type: 'SET_MODEL', payload: model });
@@ -298,6 +331,7 @@ export function ChatProvider({ children }) {
         ...state,
         dispatch,
         sendMessage,
+        stopStreaming,
         newChat,
         selectConversation,
         deleteConversation,

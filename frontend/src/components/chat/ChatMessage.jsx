@@ -28,11 +28,13 @@ function CodeBlock({ language, children }) {
 }
 
 const mdComponents = {
-  code({ node, inline, className, children, ...props }) {
+  code({ node, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || '');
-    return !inline
-      ? <CodeBlock language={match?.[1]}>{children}</CodeBlock>
-      : <code style={{ background: '#1a1a1a', color: '#d4ff4f', padding: '2px 6px', borderRadius: 4, fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+    // Inline code: no language class and content is a single line string
+    const isInline = !match && !String(children).includes('\n');
+    return isInline
+      ? <code style={{ background: '#1a1a1a', color: '#d4ff4f', padding: '2px 6px', borderRadius: 4, fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>
+      : <CodeBlock language={match?.[1]}>{children}</CodeBlock>;
   },
   pre({ children }) { return <>{children}</>; },
 };
@@ -109,6 +111,18 @@ export function ChatMessage({ message, isLast }) {
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
               {message.content}
             </ReactMarkdown>
+            {message.streaming && (
+              <span style={{
+                display: 'inline-block',
+                width: 8,
+                height: 16,
+                background: '#d4ff4f',
+                borderRadius: 2,
+                marginLeft: 2,
+                verticalAlign: 'middle',
+                animation: 'blink 0.8s step-end infinite',
+              }} />
+            )}
           </div>
         )}
 

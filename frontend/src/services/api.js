@@ -9,10 +9,7 @@ const apiClient = axios.create({
 });
 
 /**
- * Send a user message to the LangGraph backend.
- * @param {string} conversationId
- * @param {string} message
- * @param {string} model
+ * Send a user message and receive the full response (non-streaming).
  */
 export const sendMessage = async (conversationId, message, model) => {
   const { data } = await apiClient.post('/api/chat', {
@@ -21,6 +18,77 @@ export const sendMessage = async (conversationId, message, model) => {
     model,
   });
   return data;
+};
+
+/**
+ * Stream a user message via SSE.
+ *
+ * @param {string} conversationId
+ * @param {string} message
+ * @param {string} model
+ * @param {(token: string) => void} onToken  - called for each streamed token
+ * @param {(conversationId: string) => void} onDone   - called when stream ends
+ * @param {(error: string) => void} onError  - called on error
+ * @returns {() => void} abort function — call to cancel the stream
+ */
+export const streamMessage = (conversationId, message, model, onToken, onDone, onError) => {
+  const controller = new AbortController();
+
+  (async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: conversationId, message, model }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        onError(`Server error ${response.status}: ${text}`);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE lines are separated by \n\n; each starts with "data: "
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop(); // keep incomplete last chunk
+
+        for (const line of lines) {
+          const dataPart = line.startsWith('data: ') ? line.slice(6) : line;
+          if (!dataPart.trim()) continue;
+
+          try {
+            const parsed = JSON.parse(dataPart);
+            if (parsed.error) {
+              onError(parsed.error);
+            } else if (parsed.done) {
+              onDone(parsed.conversation_id);
+            } else if (parsed.token !== undefined) {
+              onToken(parsed.token);
+            }
+          } catch {
+            // Ignore malformed JSON lines
+          }
+        }
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        onError(err.message || 'Stream connection failed');
+      }
+    }
+  })();
+
+  return () => controller.abort();
 };
 
 export const getConversations = async () => {

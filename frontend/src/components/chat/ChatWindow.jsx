@@ -56,7 +56,7 @@ function ErrorBanner({ message, onRetry }) {
 }
 
 export function ChatWindow() {
-  const { messages, isLoading, error, selectedModel, regenerateLastResponse, dispatch } = useChat();
+  const { messages, isLoading, isStreaming, error, selectedModel, regenerateLastResponse, dispatch } = useChat();
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export function ChatWindow() {
                 isLast={i === messages.length - 1 && msg.role === 'assistant'}
               />
             ))}
-            {isLoading && <ThinkingBubble model={selectedModel}/>}
+            {isLoading && !isStreaming && <ThinkingBubble model={selectedModel}/>}
             <div ref={bottomRef}/>
           </div>
         )}
