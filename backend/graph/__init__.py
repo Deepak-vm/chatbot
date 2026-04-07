@@ -1,2 +1,2 @@
-from .workflow import workflow, ChatState
-__all__ = ["workflow", "ChatState"]
+from .workflow import graph_builder, ChatState
+__all__ = ["graph_builder", "ChatState"]

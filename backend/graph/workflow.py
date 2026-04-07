@@ -3,7 +3,6 @@ from typing import Annotated, TypedDict
 from dotenv import load_dotenv
 from langchain_core.messages import BaseMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph, add_messages
 
 load_dotenv()
@@ -21,14 +20,12 @@ def chat_node(state: ChatState) -> dict:
     return {"messages": [reply]}
 
 
-graph = StateGraph(ChatState)
-graph.add_node("chat_node", chat_node)
-graph.add_edge(START, "chat_node")
-graph.add_edge("chat_node", END)
+# Only the builder is defined here.
+# The graph is compiled in main.py lifespan with AsyncSqliteSaver.
+graph_builder = StateGraph(ChatState)
+graph_builder.add_node("chat_node", chat_node)
+graph_builder.add_edge(START, "chat_node")
+graph_builder.add_edge("chat_node", END)
 
-# AsyncSqliteSaver is required for async FastAPI routes (astream_events)
-# aiosqlite is already installed as a dependency of langgraph-checkpoint-sqlite
-checkpointer = AsyncSqliteSaver.from_conn_string("checkpoints.db")
-workflow = graph.compile(checkpointer=checkpointer)
 
 

@@ -1,11 +1,10 @@
 import json
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage
 
-from graph import workflow
 from schemas import ChatRequest, ChatResponse, ConversationOut, MessageOut, RenameRequest
 
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -29,13 +28,14 @@ def extract_content(raw) -> str:
 # ─── Streaming endpoint (SSE) ────────────────────────────────────────────────
 
 @router.post("/chat/stream")
-async def chat_stream(req: ChatRequest):
+async def chat_stream(req: ChatRequest, request: Request):
     """
     Server-Sent Events endpoint.
     Each event is a JSON line:
       data: {"token": "..."}\n\n   – a streamed token
       data: {"done": true, "conversation_id": "..."}\n\n  – end of stream
     """
+    workflow = request.app.state.workflow
     thread_id = req.conversation_id or str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
 
@@ -74,7 +74,8 @@ async def chat_stream(req: ChatRequest):
 # ─── Non-streaming fallback endpoint ─────────────────────────────────────────
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, request: Request):
+    workflow = request.app.state.workflow
     thread_id = req.conversation_id or str(uuid.uuid4())
 
     try:

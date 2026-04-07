@@ -1,11 +1,24 @@
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
+from graph import graph_builder
 from routes import router
 
-app = FastAPI()
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # AsyncSqliteSaver must be used as an async context manager —
+    # it opens/closes the aiosqlite connection for the app lifetime.
+    async with AsyncSqliteSaver.from_conn_string("checkpoints.db") as checkpointer:
+        app.state.workflow = graph_builder.compile(checkpointer=checkpointer)
+        yield
+    # Connection is automatically closed when the context manager exits
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
