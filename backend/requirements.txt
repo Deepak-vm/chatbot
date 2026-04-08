@@ -1,5 +1,6 @@
 langgraph
-langchain-google-genai
+# langchain-google-genai   # commented out — using Groq
+langchain-groq
 langchain-core
 langchain-community
 pydantic

@@ -81,9 +81,7 @@ export function ChatWindow() {
             ))}
             {/* Tool-call indicator: shown while a tool is running */}
             {activeTool && (
-              <div style={{ paddingLeft: 36 }}>
-                <ToolCallBubble activeTool={activeTool} />
-              </div>
+              <ToolCallBubble activeTool={activeTool} />
             )}
             {isLoading && !isStreaming && !activeTool && <ThinkingBubble model={selectedModel}/>}
             <div ref={bottomRef}/>

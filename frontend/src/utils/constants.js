@@ -1,10 +1,10 @@
 // Centralized constants for the LangGraph Chat frontend
 
 export const MODELS = [
-  { id: 'langgraph-agent', label: 'LangGraph Agent', description: 'General purpose AI agent' },
-  { id: 'rag-agent', label: 'RAG Agent', description: 'Retrieval augmented generation' },
-  { id: 'research-agent', label: 'Research Agent', description: 'Deep research & analysis' },
-  { id: 'code-agent', label: 'Code Agent', description: 'Code generation & review' },
+  { id: 'groq-llama', label: 'Llama 3.3 (Groq)', description: 'Fast LLama 3.3 70B via Groq' },
+  { id: 'rag-agent',  label: 'RAG Agent',         description: 'Retrieval augmented generation' },
+  { id: 'research',   label: 'Research Agent',     description: 'Deep research & analysis' },
+  { id: 'code',       label: 'Code Agent',         description: 'Code generation & review' },
 ];
 
 export const DEFAULT_MODEL = MODELS[0];

@@ -31,8 +31,7 @@ def calculator(first_ip: float, second_ip: float, operator: str) -> dict:
     except Exception as e:
         return {'error': str(e)}
 
-    return {'result': result}  # FIX: was missing — function returned None on success
-
+    return {'result': result}  
 
 # ── Stock price ───────────────────────────────────────────────────────────────
 @tool
@@ -42,7 +41,7 @@ def get_stock_price(symbol: str) -> dict:
     Examples: 'AAPL' for Apple, 'TSLA' for Tesla, 'GOOGL' for Google.
     Returns a dictionary containing daily time-series price data.
     """
-    api_key = os.getenv("ALPHAVANTAGE_API_KEY")  # FIX: read from env, never hardcode
+    api_key = os.getenv("ALPHAVANTAGE_API_KEY") 
     if not api_key:
         return {'error': 'ALPHAVANTAGE_API_KEY is not set in the environment.'}
 
@@ -54,7 +53,7 @@ def get_stock_price(symbol: str) -> dict:
         f"&apikey={api_key}"
     )
     try:
-        r = requests.get(url, timeout=10)  # FIX: added timeout to avoid hanging
+        r = requests.get(url, timeout=10)  
         r.raise_for_status()
         return r.json()
     except requests.RequestException as e:

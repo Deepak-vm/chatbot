@@ -67,8 +67,121 @@ textarea { resize: none; }
 /* Streaming cursor blink */
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* Tool-call bubble pulse */
-@keyframes toolPulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.5; transform: scale(0.85); }
+/* ── Tool Status Container ───────────────────────────────────────────────── */
+.tool-status-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--tool-bg, rgba(96,165,250,0.06));
+  border: 0.5px solid color-mix(in srgb, var(--tool-color, #60a5fa) 30%, transparent);
+  margin: 6px 0;
+  position: relative;
+  overflow: hidden;
+  animation: toolStatusIn 0.2s ease forwards;
+}
+
+/* Slide-in entrance */
+@keyframes toolStatusIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Left colour accent bar */
+.tool-status-accent {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 12px 0 0 12px;
+  background: var(--tool-color, #60a5fa);
+  opacity: 0.7;
+}
+
+/* Spinning icon ring */
+.tool-status-icon-ring {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--tool-color, #60a5fa) 40%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--tool-color, #60a5fa);
+  animation: toolIconSpin 2s linear infinite;
+  background: color-mix(in srgb, var(--tool-color, #60a5fa) 8%, transparent);
+}
+@keyframes toolIconSpin {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tool-color,#60a5fa) 30%, transparent); }
+  50%  { box-shadow: 0 0 0 5px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* Text body */
+.tool-status-body { flex: 1; min-width: 0; }
+
+.tool-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.tool-status-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tool-color, #60a5fa);
+}
+
+/* Bouncing dots next to the label */
+.tool-status-dot-row { display: flex; gap: 3px; align-items: center; }
+.tool-status-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--tool-color, #60a5fa);
+  opacity: 0.5;
+  animation: toolDotBounce 1.2s ease-in-out infinite;
+}
+@keyframes toolDotBounce {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.3; }
+  40%          { transform: scale(1);   opacity: 1;   }
+}
+
+/* Step description */
+.tool-status-step {
+  font-size: 12px;
+  color: #8a8a8a;
+  margin-bottom: 6px;
+}
+
+/* Query hint row */
+.tool-status-query {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--tool-color, #60a5fa) 70%, #8a8a8a);
+  background: color-mix(in srgb, var(--tool-color, #60a5fa) 6%, transparent);
+  border: 0.5px solid color-mix(in srgb, var(--tool-color, #60a5fa) 15%, transparent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+/* Shimmer progress bar */
+.tool-status-bar {
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--tool-color, #60a5fa) 12%, transparent);
+  overflow: hidden;
+}
+.tool-status-bar-fill {
+  height: 100%;
+  width: 40%;
+  border-radius: 2px;
+  background: var(--tool-color, #60a5fa);
+  animation: toolBarSlide 1.6s ease-in-out infinite;
+}
+@keyframes toolBarSlide {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(350%);  }
 }
