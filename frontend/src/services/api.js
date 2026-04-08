@@ -23,15 +23,26 @@ export const sendMessage = async (conversationId, message, model) => {
 /**
  * Stream a user message via SSE.
  *
- * @param {string} conversationId
- * @param {string} message
- * @param {string} model
- * @param {(token: string) => void} onToken  - called for each streamed token
- * @param {(conversationId: string) => void} onDone   - called when stream ends
- * @param {(error: string) => void} onError  - called on error
+ * @param {string}   conversationId
+ * @param {string}   message
+ * @param {string}   model
+ * @param {(token: string) => void}                         onToken     – each streamed LLM token
+ * @param {(name: string, input: object) => void}           onToolStart – tool call began
+ * @param {(name: string, output: string) => void}          onToolEnd   – tool call finished
+ * @param {(conversationId: string) => void}                onDone      – stream complete
+ * @param {(error: string) => void}                         onError     – on error
  * @returns {() => void} abort function — call to cancel the stream
  */
-export const streamMessage = (conversationId, message, model, onToken, onDone, onError) => {
+export const streamMessage = (
+  conversationId,
+  message,
+  model,
+  onToken,
+  onToolStart,
+  onToolEnd,
+  onDone,
+  onError,
+) => {
   const controller = new AbortController();
 
   (async () => {
@@ -59,7 +70,7 @@ export const streamMessage = (conversationId, message, model, onToken, onDone, o
 
         buffer += decoder.decode(value, { stream: true });
 
-        // SSE lines are separated by \n\n; each starts with "data: "
+        // SSE lines separated by \n\n; each starts with "data: "
         const lines = buffer.split('\n\n');
         buffer = lines.pop(); // keep incomplete last chunk
 
@@ -69,12 +80,17 @@ export const streamMessage = (conversationId, message, model, onToken, onDone, o
 
           try {
             const parsed = JSON.parse(dataPart);
+
             if (parsed.error) {
               onError(parsed.error);
             } else if (parsed.done) {
               onDone(parsed.conversation_id);
             } else if (parsed.token !== undefined) {
               onToken(parsed.token);
+            } else if (parsed.tool_start !== undefined) {
+              onToolStart(parsed.tool_start, parsed.input ?? {});
+            } else if (parsed.tool_end !== undefined) {
+              onToolEnd(parsed.tool_end, parsed.output ?? '');
             }
           } catch {
             // Ignore malformed JSON lines

@@ -5,6 +5,7 @@ import { ChatMessage } from './ChatMessage';
 import { TypingIndicator } from './TypingIndicator';
 import { WelcomeScreen } from './WelcomeScreen';
 import { MessageComposer } from './MessageComposer';
+import { ToolCallBubble } from './ToolCallBubble';
 
 function ThinkingBubble({ model }) {
   return (
@@ -56,7 +57,7 @@ function ErrorBanner({ message, onRetry }) {
 }
 
 export function ChatWindow() {
-  const { messages, isLoading, isStreaming, error, selectedModel, regenerateLastResponse, dispatch } = useChat();
+  const { messages, isLoading, isStreaming, error, selectedModel, regenerateLastResponse, dispatch, activeTool } = useChat();
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -78,7 +79,13 @@ export function ChatWindow() {
                 isLast={i === messages.length - 1 && msg.role === 'assistant'}
               />
             ))}
-            {isLoading && !isStreaming && <ThinkingBubble model={selectedModel}/>}
+            {/* Tool-call indicator: shown while a tool is running */}
+            {activeTool && (
+              <div style={{ paddingLeft: 36 }}>
+                <ToolCallBubble activeTool={activeTool} />
+              </div>
+            )}
+            {isLoading && !isStreaming && !activeTool && <ThinkingBubble model={selectedModel}/>}
             <div ref={bottomRef}/>
           </div>
         )}

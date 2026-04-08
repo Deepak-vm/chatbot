@@ -16,33 +16,42 @@ export const CONVERSATION_GROUPS = {
   OLDER: 'Older',
 };
 
+// Prompt cards shown on the welcome screen.
+// Now showcase the 3 tools you built!
 export const PROMPT_CARDS = [
   {
     id: 'p1',
-    icon: 'Terminal',
-    title: 'Explain LangGraph',
-    description: 'What is it and how does it work?',
-    prompt: 'What is LangGraph and how does it work? Explain the core concepts including StateGraph, nodes, and edges.',
+    icon: 'TrendingUp',
+    title: 'Stock Price',
+    description: 'Look up a live stock price',
+    prompt: "What is the current stock price of Apple (AAPL)?",
   },
   {
     id: 'p2',
-    icon: 'Database',
-    title: 'Build RAG system',
-    description: 'How do I build a RAG pipeline?',
-    prompt: 'How do I build a production-ready RAG pipeline with LangGraph?',
+    icon: 'Calculator',
+    title: 'Calculator',
+    description: 'Do some quick math',
+    prompt: "What is 1234 multiplied by 56? Then divide that result by 7.",
   },
   {
     id: 'p3',
-    icon: 'Bug',
-    title: 'Code assistance',
-    description: 'Help me debug and improve code',
-    prompt: 'Help me debug and improve my Python code for a LangGraph agent.',
+    icon: 'Search',
+    title: 'Web Search',
+    description: 'Search the web for latest info',
+    prompt: "Search the web for the latest news about LangGraph and summarize what you find.",
   },
   {
     id: 'p4',
-    icon: 'CheckSquare',
-    title: 'Best practices',
-    description: 'Agent development guidelines',
-    prompt: 'What are the best practices for building reliable, production-ready AI agents with LangGraph?',
+    icon: 'Zap',
+    title: 'Multi-tool',
+    description: 'Combine tools in one query',
+    prompt: "Search the web for Tesla's latest news, then get the TSLA stock price and calculate what 100 shares would be worth.",
   },
 ];
+
+// Tool metadata used for display labels in the UI
+export const TOOL_DISPLAY = {
+  search_tool:     { label: 'Web Search',   color: '#60a5fa' },
+  calculator:      { label: 'Calculator',    color: '#a78bfa' },
+  get_stock_price: { label: 'Stock Lookup', color: '#34d399' },
+};

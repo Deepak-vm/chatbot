@@ -18,6 +18,8 @@ const initialState = {
   error: null,
   selectedModel: DEFAULT_MODEL,
   sidebarOpen: true,
+  // Tool call tracking — null when idle, {name, input} while a tool is running
+  activeTool: null,
 };
 
 function chatReducer(state, action) {
@@ -91,6 +93,9 @@ function chatReducer(state, action) {
 
     case 'CLEAR_ERROR':
       return { ...state, error: null };
+
+    case 'SET_ACTIVE_TOOL':
+      return { ...state, activeTool: action.payload };
 
     case 'SET_MODEL':
       return { ...state, selectedModel: action.payload };
@@ -221,13 +226,18 @@ export function ChatProvider({ children }) {
         convId,
         content,
         state.selectedModel.label,
-        // onToken — append each token to the last message
+        // onToken — append each LLM token to the assistant placeholder
         (token) => dispatch({ type: 'APPEND_TOKEN', payload: token }),
+        // onToolStart — show which tool is being called
+        (name, input) => dispatch({ type: 'SET_ACTIVE_TOOL', payload: { name, input } }),
+        // onToolEnd — clear the active tool indicator
+        (_name, _output) => dispatch({ type: 'SET_ACTIVE_TOOL', payload: null }),
         // onDone
         (_finalConvId) => {
           dispatch({ type: 'UPDATE_LAST_MESSAGE', payload: { streaming: false } });
           dispatch({ type: 'SET_STREAMING', payload: false });
           dispatch({ type: 'SET_LOADING', payload: false });
+          dispatch({ type: 'SET_ACTIVE_TOOL', payload: null });
           abortStreamRef.current = null;
         },
         // onError
@@ -235,6 +245,7 @@ export function ChatProvider({ children }) {
           dispatch({ type: 'UPDATE_LAST_MESSAGE', payload: { streaming: false } });
           dispatch({ type: 'SET_STREAMING', payload: false });
           dispatch({ type: 'SET_LOADING', payload: false });
+          dispatch({ type: 'SET_ACTIVE_TOOL', payload: null });
           dispatch({ type: 'SET_ERROR', payload: errMsg || 'Streaming failed. Please try again.' });
           abortStreamRef.current = null;
         },
@@ -297,6 +308,7 @@ export function ChatProvider({ children }) {
     dispatch({ type: 'UPDATE_LAST_MESSAGE', payload: { streaming: false } });
     dispatch({ type: 'SET_STREAMING', payload: false });
     dispatch({ type: 'SET_LOADING', payload: false });
+    dispatch({ type: 'SET_ACTIVE_TOOL', payload: null });
   }, []);
 
   const regenerateLastResponse = useCallback(() => {

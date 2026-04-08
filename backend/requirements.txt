@@ -1,8 +1,11 @@
 langgraph
 langchain-google-genai
 langchain-core
+langchain-community
 pydantic
 python-dotenv
 fastapi
 uvicorn[standard]
 langgraph-checkpoint-sqlite
+requests
+typing-extensions

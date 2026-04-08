@@ -1,7 +1,8 @@
-import { Terminal, Database, Bug, CheckSquare, Sparkles } from 'lucide-react';
+import { Terminal, Database, Bug, CheckSquare, Sparkles, TrendingUp, Calculator, Search, Zap } from 'lucide-react';
 import { useChat } from '../../hooks/useChat';
 
-const ICON_MAP = { Terminal, Database, Bug, CheckSquare, Sparkles };
+// Add all icons used by PROMPT_CARDS in constants.js here
+const ICON_MAP = { Terminal, Database, Bug, CheckSquare, Sparkles, TrendingUp, Calculator, Search, Zap };
 
 export function PromptCard({ card }) {
   const { sendMessage } = useChat();

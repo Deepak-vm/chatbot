@@ -32,8 +32,10 @@ async def chat_stream(req: ChatRequest, request: Request):
     """
     Server-Sent Events endpoint.
     Each event is a JSON line:
-      data: {"token": "..."}\n\n   – a streamed token
-      data: {"done": true, "conversation_id": "..."}\n\n  – end of stream
+      data: {"token": "..."}\\n\\n           – a streamed LLM token
+      data: {"tool_start": "name", "input": {...}}\\n\\n  – tool call started
+      data: {"tool_end": "name", "output": "..."}\\n\\n  – tool call finished
+      data: {"done": true, "conversation_id": "..."}\\n\\n – end of stream
     """
     workflow = request.app.state.workflow
     thread_id = req.conversation_id or str(uuid.uuid4())
@@ -41,19 +43,36 @@ async def chat_stream(req: ChatRequest, request: Request):
 
     async def event_generator():
         try:
-            # astream_events(version="v2") fires:
-            #   on_chat_model_stream → individual LLM tokens
             async for event in workflow.astream_events(
                 {"messages": [HumanMessage(content=req.message)]},
                 config,
                 version="v2",
             ):
-                if event["event"] == "on_chat_model_stream":
+                kind = event["event"]
+
+                # ── Streamed LLM token ──────────────────────────────────────
+                if kind == "on_chat_model_stream":
                     chunk = event["data"].get("chunk")
                     if chunk:
                         token = extract_content(chunk.content)
                         if token:
                             yield f"data: {json.dumps({'token': token})}\n\n"
+
+                # ── Tool call started (LLM decided to use a tool) ───────────
+                elif kind == "on_tool_start":
+                    tool_name = event.get("name", "tool")
+                    tool_input = event["data"].get("input", {})
+                    yield f"data: {json.dumps({'tool_start': tool_name, 'input': tool_input})}\n\n"
+
+                # ── Tool call finished (result is available) ────────────────
+                elif kind == "on_tool_end":
+                    tool_name = event.get("name", "tool")
+                    tool_output = event["data"].get("output", "")
+                    # Truncate large outputs (e.g. full stock API response)
+                    output_str = str(tool_output)
+                    if len(output_str) > 500:
+                        output_str = output_str[:500] + "…"
+                    yield f"data: {json.dumps({'tool_end': tool_name, 'output': output_str})}\n\n"
 
             # Signal end of stream
             yield f"data: {json.dumps({'done': True, 'conversation_id': thread_id})}\n\n"
@@ -81,9 +100,6 @@ async def chat(req: ChatRequest, request: Request):
     try:
         config = {"configurable": {"thread_id": thread_id}}
 
-        # workflow.stream() yields state chunks per node, e.g.:
-        #   {"chat_node": {"messages": [AIMessage(...)]}}
-        # We consume the entire stream and keep the last chunk's messages.
         last_chunk = None
         for chunk in workflow.stream(
             {"messages": [HumanMessage(content=req.message)]},
@@ -94,8 +110,7 @@ async def chat(req: ChatRequest, request: Request):
         if last_chunk is None:
             raise ValueError("No response received from the workflow.")
 
-        # Each chunk is a dict keyed by node name; grab the last AI message.
-        node_output = next(iter(last_chunk.values()))  # e.g. {"messages": [...]}
+        node_output = next(iter(last_chunk.values()))
         last = node_output["messages"][-1]
         content = extract_content(last.content)
 
