@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -66,6 +66,9 @@ textarea { resize: none; }
 
 /* Streaming cursor blink */
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Loader spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Tool Status Container ───────────────────────────────────────────────── */
 .tool-status-container {

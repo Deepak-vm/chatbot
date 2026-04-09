@@ -3,7 +3,6 @@ from typing import Annotated
 from typing_extensions import TypedDict
 
 from langchain_core.messages import BaseMessage, SystemMessage
-# from langchain_google_genai import ChatGoogleGenerativeAI  # commented out — using Groq
 from langchain_groq import ChatGroq
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -12,17 +11,21 @@ from tools import TOOLS
 
 load_dotenv()
 
-# ── System prompt ──────────────────────────────────────────────────────────────────
+# ── System prompt ──────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = SystemMessage(content="""You are a helpful and FACTUALLY RELIABLE AI assistant.
 
 You have access to these tools:
-- search_tool: Search the internet for real-time information
-- calculator: Perform arithmetic (add, sub, mul, div)
-- get_stock_price: Fetch the latest stock price for a ticker symbol (e.g. AAPL, TSLA)
+- search_tool: Search the internet for real-time information.
+- calculator: Perform arithmetic (add, sub, mul, div).
+- get_stock_price: Fetch the latest stock price for a ticker symbol (e.g. AAPL, TSLA).
+- rag_tool: Search documents the user has uploaded (PDFs, reports, manuals). \
+Use this whenever the user references an uploaded document or asks about specific content \
+that would logically come from a document they provided.
 
 General rules:
-- Use tools whenever the user asks a factual question that requires real-time data or calculation.
+- Use tools whenever the user asks a factual question that requires real-time data, calculation, or document lookup.
 - Be concise and accurate.
+- When citing document excerpts from rag_tool, always mention the source file and page number.
 
 When using search_tool, you MUST follow these grounding rules:
 1. Base your answer ONLY on facts explicitly stated in the search results.
@@ -36,7 +39,6 @@ When using search_tool, you MUST follow these grounding rules:
 
 
 # ── LLM setup ──────────────────────────────────────────────────────────────────
-# llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", streaming=True)  # commented out
 llm = ChatGroq(
     model="openai/gpt-oss-20b",
     temperature=0,
@@ -54,8 +56,9 @@ class ChatState(TypedDict):
 def chat_node(state: ChatState) -> dict:
     """Main LLM node: prepends system prompt and invokes the tool-aware LLM."""
     messages = [SYSTEM_PROMPT] + state["messages"]
-    reply = llm_with_tools.invoke(messages)  
+    reply = llm_with_tools.invoke(messages)
     return {"messages": [reply]}
+
 
 tool_node = ToolNode(TOOLS)
 
@@ -67,8 +70,5 @@ graph_builder.add_node("chat_node", chat_node)
 graph_builder.add_node("tools", tool_node)
 
 graph_builder.add_edge(START, "chat_node")
-
 graph_builder.add_conditional_edges("chat_node", tools_condition)
-
-
 graph_builder.add_edge("tools", "chat_node")

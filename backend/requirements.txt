@@ -1,12 +1,17 @@
 langgraph
-# langchain-google-genai   # commented out — using Groq
 langchain-groq
 langchain-core
 langchain-community
+langchain-google-genai
+langchain-text-splitters
+langchain
 pydantic
 python-dotenv
 fastapi
 uvicorn[standard]
+python-multipart
 langgraph-checkpoint-sqlite
 requests
 typing-extensions
+pypdf
+faiss-cpu

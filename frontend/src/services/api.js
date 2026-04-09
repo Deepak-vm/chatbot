@@ -130,3 +130,33 @@ export const renameConversation = async (conversationId, title) => {
   const { data } = await apiClient.patch(`/api/conversations/${conversationId}`, { title });
   return data;
 };
+
+/**
+ * Upload a document (PDF / TXT / MD) to the RAG index.
+ * @param {File} file — a browser File object
+ * @param {(progress: number) => void} onProgress — 0-100
+ * @returns {Promise<{ filename: string, chunks_added: number, message: string }>}
+ */
+export const uploadDocument = async (file, onProgress) => {
+  const form = new FormData();
+  form.append('file', file);
+
+  const { data } = await apiClient.post('/api/documents/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (evt) => {
+      if (onProgress && evt.total) {
+        onProgress(Math.round((evt.loaded * 100) / evt.total));
+      }
+    },
+  });
+  return data;
+};
+
+/**
+ * List all indexed documents.
+ * @returns {Promise<Array<{ name: string, chunks: number }>>}
+ */
+export const getDocuments = async () => {
+  const { data } = await apiClient.get('/api/documents');
+  return data;
+};

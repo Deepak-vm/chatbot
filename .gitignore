@@ -46,6 +46,24 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# ── Databases & Checkpoints ─────────────────────────────────────
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+checkpoints.db*
+
+# ── RAG & Vector Store ─────────────────────────────────────────
+faiss_index/
+**/faiss_index/
+*.faiss
+*.pkl
+
+# ── Uploads & Temporary Files ──────────────────────────────────
+uploads/
+**/uploads/
+*.tmp
+
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
@@ -61,3 +79,4 @@ desktop.ini
 *.swp
 *.swo
 *~
+

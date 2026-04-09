@@ -3,6 +3,7 @@ import { Plus, Search, MessageSquare, Settings, Key, Trash2, Edit3, Check, X } f
 import { useChat } from '../../hooks/useChat';
 import { groupConversationsByDate, truncate } from '../../utils/helpers';
 import { CONVERSATION_GROUPS } from '../../utils/constants';
+import { DocumentUploader } from '../chat/DocumentUploader';
 
 /* ── Inline rename ─────────────────────────────────── */
 function RenameInput({ value, onSave, onCancel }) {
@@ -220,18 +221,21 @@ export function Sidebar() {
           </nav>
 
           {/* Bottom */}
-          <div style={{ borderTop: '0.5px solid #232323', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              { icon: Settings, label: 'Settings' },
-              { icon: Key, label: 'API keys' },
-            ].map(({ icon: Icon, label }) => (
-              <button
-                key={label}
-                style={{ fontSize: 12, color: '#8a8a8a', display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', textAlign: 'left' }}
-              >
-                <Icon size={14}/>{label}
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <DocumentUploader />
+            <div style={{ borderTop: '0.5px solid #232323', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { icon: Settings, label: 'Settings' },
+                { icon: Key, label: 'API keys' },
+              ].map(({ icon: Icon, label }) => (
+                <button
+                  key={label}
+                  style={{ fontSize: 12, color: '#8a8a8a', display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', textAlign: 'left' }}
+                >
+                  <Icon size={14}/>{label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </aside>
